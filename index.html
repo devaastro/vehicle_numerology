@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Number Numerology</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚗 Vehicle Numerology</h1>
+            <p>Discover the hidden meanings behind your vehicle number</p>
+        </header>
+
+        <main class="main">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="vehicleNumber">Enter Vehicle Number</label>
+                    <input type="text" id="vehicleNumber" placeholder="e.g., CG20J5339" autocomplete="off">
+                    <div class="input-help">Enter any vehicle number format</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="calculateNumerology()">Calculate</button>
+                    <button class="btn btn-secondary" onclick="clearResults()">Clear</button>
+                </div>
+            </div>
+
+            <div class="calculation-section" id="calculationSection" style="display: none;">
+                <div class="calculation-card">
+                    <h3>Calculation Process</h3>
+                    <div id="calculationSteps"></div>
+                    <div class="final-result">
+                        <span>Final Number: </span>
+                        <span class="number-badge" id="finalNumber"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="planet-header">
+                        <div class="number-circle" id="resultNumber"></div>
+                        <div class="planet-info">
+                            <h2 id="planetName"></h2>
+                            <p id="planetEnglish"></p>
+                        </div>
+                    </div>
+
+                    <div class="aspects-grid">
+                        <div class="aspect-card positive">
+                            <h3>✅ Positive Aspects</h3>
+                            <ul id="positiveAspects"></ul>
+                        </div>
+
+                        <div class="aspect-card negative">
+                            <h3>⚠️ Things to Watch</h3>
+                            <ul id="negativeAspects"></ul>
+                        </div>
+                    </div>
+
+                    <div class="advice-card">
+                        <h3>💡 Advice</h3>
+                        <p id="adviceText"></p>
+                    </div>
+
+                    <div class="suitable-card">
+                        <h3>🎯 Best Suited For</h3>
+                        <p id="suitableText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <h3>❌ Error</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Vehicle Numerology App</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
