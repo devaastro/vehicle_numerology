@@ -11,6 +11,7 @@
         <header class="header">
             <h1>🚗 Vehicle Numerology</h1>
             <p>Discover the hidden meanings behind your vehicle number</p>
+            <button id="historyToggle" class="btn btn-secondary">History</button>
         </header>
 
         <main class="main">
@@ -84,6 +85,19 @@
             <p>&copy; 2025 Vehicle Numerology App - Budhadev</p>
         </footer>
     </div>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay"></div>
+
+<!-- Sidebar -->
+<aside id="historySidebar" class="history-sidebar">
+    <div class="history-header">
+        <h2>History</h2>
+        <button id="closeSidebar" class="btn btn-secondary small-btn">✕</button>
+    </div>
+    <ul id="historyList" class="history-list"></ul>
+</aside>
+
 
     <script src="script.js"></script>
 </body>

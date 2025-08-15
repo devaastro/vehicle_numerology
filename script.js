@@ -1,20 +1,21 @@
-// Global variables
+// === GLOBALS ===
 let numerologyData = {};
+const HISTORY_KEY = 'vehicleHistory';
+const MAX_DAYS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-// Load JSON data
+// === LOAD DATA ===
 async function loadNumerologyData() {
     try {
         const response = await fetch('vehicle_numerology.json');
         const data = await response.json();
         numerologyData = data.numerology_data;
-        console.log('Numerology data loaded successfully');
     } catch (error) {
         console.error('Error loading numerology data:', error);
         showError('Failed to load numerology data. Please refresh the page.');
     }
 }
 
-// Alphabet to number mapping
+// === MAPPING ===
 const alphabetToNumber = {
     'a': 1, 'i': 1, 'j': 1, 'q': 1, 'y': 1,
     'b': 2, 'k': 2, 'r': 2,
@@ -26,34 +27,24 @@ const alphabetToNumber = {
     'f': 8, 'p': 8
 };
 
-// Calculate numerology for vehicle number
+// === NUMEROLOGY CALCULATION ===
 function calculateVehicleNumerology(vehicleNumber) {
-    if (!vehicleNumber || vehicleNumber.trim() === '') {
-        throw new Error('Please enter a vehicle number');
-    }
+    if (!vehicleNumber.trim()) throw new Error('Please enter a vehicle number');
 
     const cleanNumber = vehicleNumber.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    
-    if (cleanNumber.length === 0) {
-        throw new Error('Please enter a valid vehicle number');
-    }
+    if (!cleanNumber) throw new Error('Please enter a valid vehicle number');
 
     let sum = 0;
-    let steps = [];
     let breakdown = [];
+    let steps = [];
 
-    // Process each character
     for (let char of cleanNumber) {
-        if (char >= '0' && char <= '9') {
-            // It's a digit
-            const digit = parseInt(char);
-            sum += digit;
-            breakdown.push(`${char.toUpperCase()} = ${digit}`);
+        if (!isNaN(char)) {
+            sum += parseInt(char);
+            breakdown.push(`${char.toUpperCase()} = ${char}`);
         } else if (alphabetToNumber[char]) {
-            // It's a letter
-            const value = alphabetToNumber[char];
-            sum += value;
-            breakdown.push(`${char.toUpperCase()} = ${value}`);
+            sum += alphabetToNumber[char];
+            breakdown.push(`${char.toUpperCase()} = ${alphabetToNumber[char]}`);
         }
     }
 
@@ -61,161 +52,165 @@ function calculateVehicleNumerology(vehicleNumber) {
     steps.push(`Breakdown: ${breakdown.join(', ')}`);
     steps.push(`Sum: ${breakdown.map(b => b.split(' = ')[1]).join(' + ')} = ${sum}`);
 
-    // Reduce to single digit
-    let reductionSteps = [];
     while (sum > 9) {
-        const digits = sum.toString().split('').map(d => parseInt(d));
-        reductionSteps.push(`${sum} → ${digits.join(' + ')} = ${digits.reduce((a, b) => a + b, 0)}`);
-        sum = digits.reduce((a, b) => a + b, 0);
-    }
-
-    if (reductionSteps.length > 0) {
-        steps.push(`Reduction: ${reductionSteps.join(', ')}`);
+        const digits = sum.toString().split('').map(Number);
+        steps.push(`Reduction: ${sum} → ${digits.join(' + ')} = ${digits.reduce((a, b) => a + b)}`);
+        sum = digits.reduce((a, b) => a + b);
     }
 
     steps.push(`Final Number: ${sum}`);
 
-    return {
-        finalNumber: sum,
-        steps: steps,
-        breakdown: breakdown
-    };
+    return { finalNumber: sum, steps, breakdown };
 }
 
-// Main calculation function
-async function calculateNumerology() {
-    const vehicleNumberInput = document.getElementById('vehicleNumber');
-    const vehicleNumber = vehicleNumberInput.value.trim();
-
-    // Clear previous results
-    hideAllSections();
-
-    if (!vehicleNumber) {
-        showError('Please enter a vehicle number');
-        return;
-    }
-
-    try {
-        // Calculate numerology
-        const calculation = calculateVehicleNumerology(vehicleNumber);
-        const finalNumber = calculation.finalNumber;
-
-        // Show calculation steps
-        showCalculationSteps(calculation);
-
-        // Get numerology data
-        if (numerologyData[finalNumber]) {
-            showNumerologyResult(finalNumber, numerologyData[finalNumber]);
-        } else {
-            throw new Error('Numerology data not found for this number');
-        }
-
-    } catch (error) {
-        showError(error.message);
-    }
-}
-
-// Show calculation steps
+// === DISPLAY FUNCTIONS ===
 function showCalculationSteps(calculation) {
-    const calculationSection = document.getElementById('calculationSection');
     const calculationSteps = document.getElementById('calculationSteps');
     const finalNumber = document.getElementById('finalNumber');
-
-    let stepsHtml = '<div class="calculation-steps">';
-    calculation.steps.forEach(step => {
-        stepsHtml += `<div>${step}</div>`;
-    });
-    stepsHtml += '</div>';
-
-    calculationSteps.innerHTML = stepsHtml;
+    calculationSteps.innerHTML = calculation.steps.map(step => `<div>${step}</div>`).join('');
     finalNumber.textContent = calculation.finalNumber;
-    
-    calculationSection.style.display = 'block';
+    document.getElementById('calculationSection').style.display = 'block';
 }
 
-// Show numerology result
 function showNumerologyResult(number, data) {
-    const resultSection = document.getElementById('resultSection');
-    const resultNumber = document.getElementById('resultNumber');
-    const planetName = document.getElementById('planetName');
-    const planetEnglish = document.getElementById('planetEnglish');
-    const positiveAspects = document.getElementById('positiveAspects');
-    const negativeAspects = document.getElementById('negativeAspects');
-    const adviceText = document.getElementById('adviceText');
-    const suitableText = document.getElementById('suitableText');
+    document.getElementById('resultNumber').textContent = number;
+    document.getElementById('planetName').textContent = data.planet;
+    document.getElementById('planetEnglish').textContent = `(${data.planet_english})`;
 
-    // Set basic info
-    resultNumber.textContent = number;
-    planetName.textContent = data.planet;
-    planetEnglish.textContent = `(${data.planet_english})`;
+    const posList = document.getElementById('positiveAspects');
+    const negList = document.getElementById('negativeAspects');
+    posList.innerHTML = data.positive_aspects.map(a => `<li>${a}</li>`).join('');
+    negList.innerHTML = data.negative_aspects.map(a => `<li>${a}</li>`).join('');
 
-    // Set positive aspects
-    positiveAspects.innerHTML = '';
-    data.positive_aspects.forEach(aspect => {
-        const li = document.createElement('li');
-        li.textContent = aspect;
-        positiveAspects.appendChild(li);
-    });
+    document.getElementById('adviceText').textContent = data.advice;
+    document.getElementById('suitableText').textContent = data.suitable_for;
 
-    // Set negative aspects
-    negativeAspects.innerHTML = '';
-    data.negative_aspects.forEach(aspect => {
-        const li = document.createElement('li');
-        li.textContent = aspect;
-        negativeAspects.appendChild(li);
-    });
-
-    // Set advice and suitable for
-    adviceText.textContent = data.advice;
-    suitableText.textContent = data.suitable_for;
-
-    resultSection.style.display = 'block';
+    document.getElementById('resultSection').style.display = 'block';
 }
 
-// Show error message
 function showError(message) {
-    const errorSection = document.getElementById('errorSection');
-    const errorMessage = document.getElementById('errorMessage');
-    
-    errorMessage.textContent = message;
-    errorSection.style.display = 'block';
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorSection').style.display = 'block';
 }
 
-// Hide all result sections
 function hideAllSections() {
     document.getElementById('calculationSection').style.display = 'none';
     document.getElementById('resultSection').style.display = 'none';
     document.getElementById('errorSection').style.display = 'none';
 }
 
-// Clear all results and input
 function clearResults() {
     document.getElementById('vehicleNumber').value = '';
     hideAllSections();
-    document.getElementById('vehicleNumber').focus();
 }
 
-// Handle Enter key press
-document.addEventListener('DOMContentLoaded', function() {
-    const vehicleNumberInput = document.getElementById('vehicleNumber');
-    
-    vehicleNumberInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            calculateNumerology();
-        }
-    });
+// === HISTORY FUNCTIONS ===
+function saveHistory(vehicleNumber, finalNumber) {
+    let history = getHistory();
+    history.push({ value: vehicleNumber, finalNumber, date: Date.now() });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
 
-    // Auto-format input (uppercase)
-    vehicleNumberInput.addEventListener('input', function(e) {
+function getHistory() {
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    const now = Date.now();
+    history = history.filter(item => (now - item.date) < MAX_DAYS);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    return history;
+}
+
+function renderHistory() {
+    const history = getHistory();
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+
+    if (history.length === 0) {
+        historyList.innerHTML = '<li class="empty">No history yet</li>';
+        return;
+    }
+
+    history.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+            <span class="history-text">${item.value} → ${item.finalNumber}</span>
+            <button class="delete-btn" data-index="${index}">✕</button>
+        `;
+
+        li.querySelector('.history-text').addEventListener('click', () => {
+            document.getElementById('vehicleNumber').value = item.value;
+            calculateNumerology();
+            toggleSidebar(false);
+        });
+
+        li.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            let h = getHistory();
+            h.splice(index, 1);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+            renderHistory();
+        });
+
+        historyList.appendChild(li);
+    });
+}
+
+function clearHistory() {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+}
+
+// === SIDEBAR CONTROL ===
+function toggleSidebar(force = null) {
+    const sidebar = document.getElementById('historySidebar');
+    const overlay = document.getElementById('overlay');
+    const isOpen = sidebar.classList.contains('open');
+
+    if (force === true || (!isOpen && force !== false)) {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+    } else {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+    }
+}
+
+// === MAIN CALCULATION ===
+async function calculateNumerology() {
+    const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
+    hideAllSections();
+    if (!vehicleNumber) {
+        showError('Please enter a vehicle number');
+        return;
+    }
+
+    try {
+        const calculation = calculateVehicleNumerology(vehicleNumber);
+        const finalNumber = calculation.finalNumber;
+        showCalculationSteps(calculation);
+        if (numerologyData[finalNumber]) {
+            showNumerologyResult(finalNumber, numerologyData[finalNumber]);
+        } else throw new Error('Numerology data not found for this number');
+
+        saveHistory(vehicleNumber, finalNumber);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// === EVENT LISTENERS ===
+document.addEventListener('DOMContentLoaded', () => {
+    loadNumerologyData();
+    document.getElementById('historyToggle').addEventListener('click', () => {
+        toggleSidebar(true);
+        renderHistory();
+    });
+    document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
+    document.getElementById('overlay').addEventListener('click', () => toggleSidebar(false));
+    document.getElementById('vehicleNumber').addEventListener('keypress', e => {
+        if (e.key === 'Enter') calculateNumerology();
+    });
+    document.getElementById('vehicleNumber').addEventListener('input', e => {
         e.target.value = e.target.value.toUpperCase();
     });
-
-    // Load numerology data on page load
-    loadNumerologyData();
 });
-
-// Add some example numbers for testing
-function addExampleNumbers() {
-    const examples = ['CG20J5339', 'MH01AB1234', '1234', 'UP14AT7890'];
-    console.log('Example numbers for testing:', examples);
-}
